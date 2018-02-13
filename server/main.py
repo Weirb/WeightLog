@@ -1,0 +1,95 @@
+"""File: main.py
+Contains routing decorators for Flask server.
+Main entry point for the program.
+"""
+
+from flask import request
+from app import app
+from model import User, Weight, db
+import json
+
+
+@app.route('/add_record', methods=['POST'])
+def update():
+    """Add a record into the database.
+    
+    Request data is a bytearray consisting of a JSON string.
+    JSON object contains two key:value pairs:
+    "name" -- the user's name in the database
+    "password" -- the user's password for the database
+    "value" -- the value to add to the database
+
+    Return success if record added to the database.
+    Return relevant error if failed.
+    """
+    if request.method == "POST":
+        data = json.loads(request.data.decode('utf8'))
+        print(data)
+        
+        for key in ['value', 'name', 'password']:
+            if key not in data:
+                return 'Invalid parameters.', 400
+
+        value = int(data['value'])
+        name = data['name'].rstrip()
+        password = data['password']
+        
+        user = User.query.filter_by(name=name).first()
+        if user is None:
+            print('No such user.')
+            return 'No such user.', 401
+        
+        if not user.verify_password(password):
+            print('Wrong password.')
+            return 'Wrong password.', 401
+
+        Weight(user=user, value=value)
+
+        try:
+            db.session.commit()
+        except:
+            return 'Error', 500
+        else:
+            return 'Success', 204
+
+@app.route('/create_user', methods=['POST'])
+def create_user():
+    """Create new user in the database.
+    
+    Request data is a bytearray consisting of a JSON string.
+    JSON object contains two key:value pairs:
+    "name" -- the user's name in the database
+    "password" -- the user's password for the database
+    "value" -- the value to add to the database
+
+    Return success if user added to the database.
+    Return relevant error if failed.
+    """
+    if request.method == "POST":
+        data = json.loads(request.data.decode('utf8'))
+        print(data)
+        
+        for key in ['name', 'password']:
+            if key not in data:
+                return 'Invalid parameters.', 400
+
+        name = data['name'].rstrip()
+        password = data['password']
+        
+        user = User.query.filter_by(name=name).first()
+        
+        if user is not None:
+            return 'User already exists.', 401
+
+        try:
+            user = User(name=name, password=password)
+            db.session.add(user)
+            db.session.commit()
+        except:
+            return 'Error', 500
+        else:
+            return 'Success', 201
+
+
+if __name__ == "__main__":
+    app.run(host='0.0.0.0', port=5000, debug=True)
