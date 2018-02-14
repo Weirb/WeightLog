@@ -69,18 +69,20 @@ def create_user():
         data = json.loads(request.data.decode('utf8'))
         print(data)
         
+        # Check for correct request arguments
         for key in ['name', 'password']:
             if key not in data:
                 return 'Invalid parameters.', 400
 
-        name = data['name'].rstrip()
+        name = data['name']
         password = data['password']
         
+        # Determine if user exists
         user = User.query.filter_by(name=name).first()
-        
         if user is not None:
             return 'User already exists.', 401
 
+        # User does not exist, create new user
         try:
             user = User(name=name, password=password)
             db.session.add(user)
@@ -88,7 +90,7 @@ def create_user():
         except:
             return 'Error', 500
         else:
-            return 'Success', 201
+            return user.auth_token, 201
 
 @app.route('/authenticate_user', methods=['POST'])
 def authenticate_user():
