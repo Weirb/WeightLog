@@ -6,6 +6,8 @@ from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 from app import app
 import hashlib, binascii
+from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
+import datetime as dt
 
 
 db = SQLAlchemy(app)
@@ -41,14 +43,17 @@ class User(db.Model):
     - Numerical id (primary key)
     - Name (unique)
     - Password (salted and hashed)
+    - Auth token
     """
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(50), nullable=False, unique=True)
     pw_hash = db.Column(db.String, nullable=False)
+    auth_token = db.Column(db.String, nullable=False)
 
     def __init__(self, **kwargs):
         self.pw_hash = self.hash_password(kwargs['password'])
         self.name = kwargs['name']
+        self.generate_auth_token()
 
     def hash_password(self, password):
         h = hashlib.pbkdf2_hmac('sha256', bytearray(password, 'utf8'), app.config['SECRET_KEY'], 100000)
@@ -59,6 +64,11 @@ class User(db.Model):
             return True
         else:
             return False
+
+    def generate_auth_token(self):
+        exp = dt.timedelta(days=7).total_seconds()
+        s = Serializer(app.config['SECRET_KEY'], exp)
+        self.auth_token = s.dumps({'id':self.id})
 
     def __repr__(self):
         return '<User {}>'.format(self.name)
