@@ -90,6 +90,46 @@ def create_user():
         else:
             return 'Success', 201
 
+@app.route('/authenticate_user', methods=['POST'])
+def authenticate_user():
+    """Authenticate existing user with the server.
+    
+    Request data is a bytearray consisting of a JSON string.
+    JSON object contains two key:value pairs:
+    "name" -- the user's name in the database
+    "password" -- the user's password for the database
+
+    Return auth token if user is authenticated.
+    Return relevant error if failed.
+    """
+    if request.method == "POST":
+        data = json.loads(request.data.decode('utf8'))
+        print(data)
+
+        # Check for correct request arguments
+        for key in ['name', 'password']:
+            if key not in data:
+                return 'Invalid parameters.', 400
+
+        name = data['name']
+        password = data['password']
+        
+        # Determine if user exists
+        user = User.query.filter_by(name=name).first()
+        if user is None:
+            print('No such user.')
+            return 'No such user.', 401
+        
+        # Username exists, verify the password
+        if not user.verify_password(password):
+            print('Wrong password.')
+            return 'Wrong password.', 401
+
+        # Username exists, password is verified
+        # Return authentication token, update db entry
+        user.generate_auth_token()
+        return user.auth_token, 200
+
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=5000, debug=True)
