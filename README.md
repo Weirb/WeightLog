@@ -7,7 +7,10 @@ Server written in Python using the Flask microframework.
 Android client written in Java interacts with the server.
 
 ### TODO:
-- [ ] Authentication tokens; no local storage of passwords
-- [ ] Login interface is the main app screen
+- [x] Authentication tokens; no local storage of passwords
+- [x] Login interface is the main app screen
 - [ ] Dashboard for viewing data
 - [ ] Statistical analysis of data
+- [ ] Networking off the main thread
+- [ ] Reduce code duplication
+- [ ] Improve the UI with colours/layout
