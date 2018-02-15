@@ -1,15 +1,21 @@
 <resources>
     <string name="app_name">Weight Log</string>
     <string name="button_test1">Send</string>
-    <string name="button_test2">Send POST</string>
-    <string name="button">Settings</string>
-    <string name="string_name">Name:</string>
-    <string name="string_password">Password:</string>
-    <string name="string_addr">URL:</string>
-    <string name="string_save">SAVE</string>
-    <string name="title_activity_login">Sign in</string>
+
+    <string name="string_username">Username</string>
+    <string name="string_password">Password</string>
+
+    <string name="post_username">username</string>
+    <string name="post_password">password</string>
+    <string name="post_value">value</string>
+
+    <string name="string_login">Sign in</string>
     <string name="string_new_user">Create new user</string>
+
     <string name="url_string">http://192.168.1.77:5000/</string>
     <string name="url_add_record_string">add_record</string>
     <string name="url_create_user_string">create_user</string>
+    <string name="url_authenticate_user">authenticate_user</string>
+    <string name="url_verify_token">verify_token</string>
+    <string name="url_deauth_token">deauth_token</string>
 </resources>

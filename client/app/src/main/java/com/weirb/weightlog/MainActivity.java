@@ -25,6 +25,7 @@ import android.os.StrictMode;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.TextView;
@@ -39,7 +40,7 @@ import java.nio.charset.StandardCharsets;
 public class MainActivity extends AppCompatActivity {
 
     EditText value;
-    TextView status;
+    TextView status, user_text;
 
     SharedPreferences sharedPref;
 
@@ -55,6 +56,10 @@ public class MainActivity extends AppCompatActivity {
         value = findViewById(R.id.value_text);
 
         sharedPref = getSharedPreferences("key",Context.MODE_PRIVATE);
+
+        // Set the current user to the top of the screen
+        user_text = findViewById(R.id.current_user_text);
+        user_text.setText(sharedPref.getString(getString(R.string.string_username), ""));
     }
 
     public void sendPost(View view) throws Exception {
@@ -63,45 +68,85 @@ public class MainActivity extends AppCompatActivity {
 
             String[] url = {getString(R.string.url_string), getString(R.string.url_add_record_string)};
 
-            URL obj = new URL(TextUtils.join("", url));
-            HttpURLConnection con = (HttpURLConnection) obj.openConnection();
-            con.setRequestMethod("POST"); // PUT is another valid option
-            con.setDoOutput(true);
 
             String default_string = "";
             JSONObject json_obj = new JSONObject();
-            json_obj.put("name", sharedPref.getString(getString(R.string.string_name), default_string));
-            json_obj.put("password", sharedPref.getString(getString(R.string.string_password), default_string));
-            json_obj.put("value",value.getText());
+            json_obj.put(getString(R.string.post_username), sharedPref.getString(getString(R.string.string_username), default_string));
+            json_obj.put(getString(R.string.post_password), sharedPref.getString(getString(R.string.string_password), default_string));
+            json_obj.put(getString(R.string.post_value),value.getText());
+
 
             byte[] out = json_obj.toString().getBytes(StandardCharsets.UTF_8);
             int length = out.length;
 
+
+            URL obj = new URL(TextUtils.join("", url));
+            HttpURLConnection con = (HttpURLConnection) obj.openConnection();
+            con.setRequestMethod("POST"); // PUT is another valid option
+            con.setDoOutput(true);
             con.setFixedLengthStreamingMode(length);
             con.setRequestProperty("Content-Type", "application/json; charset=UTF-8");
             con.connect();
+
+
             OutputStream os = con.getOutputStream();
             os.write(out);
 
             int responseCode = con.getResponseCode();
             if (Integer.toString(responseCode).startsWith("2")){
                 status.setText("SUCCESS");
-//                status.setBackgroundColor(Color.GREEN);
                 status.setTextColor(Color.GREEN);
                 value.setText("");
             } else {
+                // Should also check if token is still valid
                 status.setText("ERROR");
-//                status.setBackgroundColor(Color.RED);
                 status.setTextColor(Color.RED);
             }
-
         } catch(Exception e){
             System.out.println(e.toString());
         }
     }
 
-    public void viewSettings(View view) {
-        Intent intent = new Intent(this, SettingsView.class);
+//    public void viewSettings(View view) {
+//        Intent intent = new Intent(this, SettingsView.class);
+//        startActivity(intent);
+//    }
+
+    public void logout(View view){
+        try {
+            // Deauthorise token on server
+            String[] url = {getString(R.string.url_string), getString(R.string.url_deauth_token)};
+
+            JSONObject json_obj = new JSONObject();
+            json_obj.put(getString(R.string.post_username), sharedPref.getString(getString(R.string.string_username), ""));
+
+            byte[] out = json_obj.toString().getBytes(StandardCharsets.UTF_8);
+            int length = out.length;
+
+            URL obj = new URL(TextUtils.join("", url));
+            HttpURLConnection con = (HttpURLConnection) obj.openConnection();
+            con.setRequestMethod("POST");
+            con.setDoOutput(true);
+            con.setFixedLengthStreamingMode(length);
+            con.setRequestProperty("Content-Type", "application/json; charset=UTF-8");
+            con.connect();
+
+            OutputStream os = con.getOutputStream();
+            os.write(out);
+
+            Log.d("RESPONSE", Integer.toString(con.getResponseCode()));
+            Log.d("RESPONSE", "SUCCESS");
+
+        } catch(Exception e){
+            Log.d("RESPONSE", e.toString());
+        }
+
+        SharedPreferences.Editor editor = sharedPref.edit();
+        editor.putString(getString(R.string.string_username), "");
+        editor.putString(getString(R.string.string_password), "");
+        editor.apply();
+
+        Intent intent = new Intent(this, Login.class);
         startActivity(intent);
     }
 
