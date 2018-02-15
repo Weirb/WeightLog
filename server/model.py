@@ -65,6 +65,14 @@ class User(db.Model):
         else:
             return False
 
+    def verify_token(self, token):
+        s = Serializer(app.config['SECRET_KEY'])
+        try:
+            data = s.loads(token)
+        except:
+            return False
+        return True
+
     def generate_auth_token(self):
         exp = dt.timedelta(days=7).total_seconds()
         s = Serializer(app.config['SECRET_KEY'], exp)

@@ -26,26 +26,30 @@ def update():
         data = json.loads(request.data.decode('utf8'))
         print(data)
         
-        for key in ['value', 'name', 'password']:
+        # Check for correct request arguments
+        for key in ['value', 'username', 'password']:
             if key not in data:
                 return 'Invalid parameters.', 400
 
         value = int(data['value'])
-        name = data['name'].rstrip()
+        name = data['username']
         password = data['password']
         
+        # Determine if user exists
         user = User.query.filter_by(name=name).first()
         if user is None:
             print('No such user.')
             return 'No such user.', 401
         
-        if not user.verify_password(password):
+        # Username exists, verify the token
+        if not user.verify_token(password):
             print('Wrong password.')
             return 'Wrong password.', 401
 
-        Weight(user=user, value=value)
-
+        # Username exists, auth token is verified
+        # Add item to the db
         try:
+            Weight(user=user, value=value)
             db.session.commit()
         except:
             return 'Error', 500
@@ -70,11 +74,11 @@ def create_user():
         print(data)
         
         # Check for correct request arguments
-        for key in ['name', 'password']:
+        for key in ['username', 'password']:
             if key not in data:
                 return 'Invalid parameters.', 400
 
-        name = data['name']
+        name = data['username']
         password = data['password']
         
         # Determine if user exists
@@ -109,11 +113,11 @@ def authenticate_user():
         print(data)
 
         # Check for correct request arguments
-        for key in ['name', 'password']:
+        for key in ['username', 'password']:
             if key not in data:
                 return 'Invalid parameters.', 400
 
-        name = data['name']
+        name = data['username']
         password = data['password']
         
         # Determine if user exists
