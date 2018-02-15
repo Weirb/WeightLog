@@ -9,6 +9,65 @@ from model import User, Weight, db
 import json
 
 
+@app.route('/deauth_token', methods=['POST'])
+def deauth_token():
+    """Deauthorise user token.
+    Return success if token is invalidated.
+    Return error otherwise.
+    """
+    if request.method == "POST":
+        data = json.loads(request.data.decode('utf8'))
+        print(data)
+
+        # Check for correct request arguments
+        for key in ['username']:
+            if key not in data:
+                return 'Invalid parameters.', 400
+
+        name = data['username']
+        
+        # Determine if user exists
+        user = User.query.filter_by(name=name).first()
+        if user is None:
+            print('No such user.')
+            return 'No such user.', 401
+        
+        # Username exists, deauth the token
+        user.deauthorise_token()
+        return 'Auth token invalid.', 200
+
+@app.route('/verify_token', methods=['POST'])
+def verify_token():
+    """Verify user auth token.
+    Return success if token is still valid.
+    Return error otherwise.
+    """
+    if request.method == "POST":
+        data = json.loads(request.data.decode('utf8'))
+        print(data)
+
+        # Check for correct request arguments
+        for key in ['username', 'password']:
+            if key not in data:
+                return 'Invalid parameters.', 400
+
+        name = data['username']
+        password = data['password']
+        
+        # Determine if user exists
+        user = User.query.filter_by(name=name).first()
+        if user is None:
+            print('No such user.')
+            return 'No such user.', 401
+        
+        # Username exists, verify the password
+        if not user.verify_token(password):
+            print('Invalid token.')
+            return 'Invalid token.', 401
+
+        # Username exists, token is verified
+        return 'Auth token valid.', 200
+
 @app.route('/add_record', methods=['POST'])
 def update():
     """Add a record into the database.

@@ -73,6 +73,9 @@ class User(db.Model):
             return False
         return True
 
+    def deauthorise_token(self):
+        self.auth_token = b''
+
     def generate_auth_token(self):
         exp = dt.timedelta(days=7).total_seconds()
         s = Serializer(app.config['SECRET_KEY'], exp)
